@@ -8,6 +8,16 @@ from pymongo import ReturnDocument
 
 from .mongo import get_db
 
+CORRECT_COLORS = ["red", "blue", "green", "yellow"]
+CORRECT_OBJECT_NUMBERS = {
+    "object1": 12,
+    "object2": 7,
+    "object3": 42,
+    "object4": 3,
+    "object5": 19,
+    "object6": 88,
+}
+
 
 def health(request):
     return JsonResponse({"status": "ok"})
@@ -41,6 +51,82 @@ def session_view(request):
     )
     response.set_cookie("session_id", session_id, httponly=True, samesite="Lax", path="/")
     return response
+
+
+@require_http_methods(["POST"])
+def step2_objects_view(request):
+    session_id = request.COOKIES.get("session_id")
+    if not session_id:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+
+    answers = payload.get("answers")
+    if not isinstance(answers, dict):
+        return JsonResponse({"success": False, "message": "Incorrect answers"})
+
+    if set(answers.keys()) != set(CORRECT_OBJECT_NUMBERS.keys()):
+        return JsonResponse({"success": False, "message": "Incorrect answers"})
+
+    for key, correct_value in CORRECT_OBJECT_NUMBERS.items():
+        if answers.get(key) != correct_value:
+            return JsonResponse({"success": False, "message": "Incorrect answers"})
+
+    db = get_db()
+    updated = db.sessions.find_one_and_update(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "current_step": 2,
+                "steps.step2": {"answers": answers, "completed": True},
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not updated:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    return JsonResponse({"success": True, "current_step": updated.get("current_step", 2)})
+
+
+@require_http_methods(["POST"])
+def step1_color_view(request):
+    session_id = request.COOKIES.get("session_id")
+    if not session_id:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+
+    colors = payload.get("colors")
+    if not isinstance(colors, list) or colors != CORRECT_COLORS:
+        return JsonResponse({"success": False, "message": "Incorrect pattern"})
+
+    db = get_db()
+    updated = db.sessions.find_one_and_update(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "current_step": 1,
+                "steps.step1": {
+                    "colors": colors,
+                    "completed": True,
+                },
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not updated:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    return JsonResponse({"success": True, "current_step": updated.get("current_step", 1)})
 
 
 @require_http_methods(["GET"])
