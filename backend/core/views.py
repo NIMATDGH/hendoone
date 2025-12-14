@@ -1,5 +1,7 @@
 import json
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 from django.http import JsonResponse
@@ -127,6 +129,60 @@ def step1_color_view(request):
         return JsonResponse({"detail": "Session not found"}, status=404)
 
     return JsonResponse({"success": True, "current_step": updated.get("current_step", 1)})
+
+
+@require_http_methods(["POST"])
+def step3_selfie_view(request):
+    session_id = request.COOKIES.get("session_id")
+    if not session_id:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    db = get_db()
+    session_doc = db.sessions.find_one({"session_id": session_id})
+    if not session_doc:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    upload_dir = os.environ.get("UPLOAD_DIR")
+    if not upload_dir:
+        return JsonResponse({"detail": "UPLOAD_DIR not configured"}, status=500)
+
+    upload_root = Path(upload_dir)
+    upload_root.mkdir(parents=True, exist_ok=True)
+    session_path = upload_root / session_id
+    session_path.mkdir(parents=True, exist_ok=True)
+
+    upload_file = request.FILES.get("file")
+    if not upload_file:
+        return JsonResponse({"success": False, "message": "No file uploaded"})
+
+    extension = Path(upload_file.name).suffix or ""
+    filename = f"selfie{extension}"
+    destination = session_path / filename
+
+    with destination.open("wb") as dest:
+        for chunk in upload_file.chunks():
+            dest.write(chunk)
+
+    updated = db.sessions.find_one_and_update(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "current_step": 3,
+                "steps.step3": {
+                    "filename": filename,
+                    "path": str(destination),
+                    "uploaded_at": datetime.now(timezone.utc),
+                    "completed": True,
+                },
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not updated:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    return JsonResponse({"success": True, "current_step": updated.get("current_step", 3)})
 
 
 @require_http_methods(["GET"])
