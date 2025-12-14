@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -53,6 +54,53 @@ def session_view(request):
     )
     response.set_cookie("session_id", session_id, httponly=True, samesite="Lax", path="/")
     return response
+
+
+@require_http_methods(["POST"])
+def finish_view(request):
+    session_id = request.COOKIES.get("session_id")
+    if not session_id:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    db = get_db()
+    session_doc = db.sessions.find_one({"session_id": session_id})
+    if not session_doc:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    existing_code = session_doc.get("final_code")
+    if existing_code:
+        return JsonResponse(
+            {
+                "success": True,
+                "final_code": existing_code,
+                "already_generated": True,
+            }
+        )
+
+    # Generate unique 6-digit code
+    final_code = None
+    while True:
+        candidate = f"{random.randint(0, 999999):06d}"
+        if not db.sessions.find_one({"final_code": candidate}):
+            final_code = candidate
+            break
+
+    updated = db.sessions.find_one_and_update(
+        {"session_id": session_id},
+        {"$set": {"final_code": final_code, "completed_at": datetime.now(timezone.utc)}},
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not updated:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    return JsonResponse(
+        {
+            "success": True,
+            "final_code": final_code,
+            "already_generated": False,
+        }
+    )
 
 
 @require_http_methods(["POST"])

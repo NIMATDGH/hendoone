@@ -9,4 +9,5 @@ urlpatterns = [
     path("step1/color/", views.step1_color_view, name="step1_color"),
     path("step2/objects/", views.step2_objects_view, name="step2_objects"),
     path("step3/selfie/", views.step3_selfie_view, name="step3_selfie"),
+    path("finish/", views.finish_view, name="finish"),
 ]
