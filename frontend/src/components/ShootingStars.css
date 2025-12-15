@@ -1,0 +1,38 @@
+.shootingStars {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.shootingStar {
+  position: absolute;
+  width: var(--len);
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 1)
+  );
+  transform: rotate(35deg);
+  animation: shoot var(--dur) ease-out forwards,
+             fade 600ms ease-out forwards;
+  animation-delay: 0ms, calc(var(--dur) - 200ms);
+}
+
+@keyframes shoot {
+  from {
+    transform: translate(0, 0) rotate(35deg);
+  }
+  to {
+    transform: translate(60vw, 35vh) rotate(35deg);
+  }
+}
+
+@keyframes fade {
+  to {
+    opacity: 0;
+  }
+}
