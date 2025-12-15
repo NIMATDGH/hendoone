@@ -11,6 +11,7 @@ from pymongo import ReturnDocument
 
 from .mongo import get_db
 
+CORRECT_WORD = "hendoone"
 CORRECT_COLORS = ["red", "blue", "green", "yellow"]
 CORRECT_OBJECT_NUMBERS = {
     "object1": 12,
@@ -100,6 +101,52 @@ def finish_view(request):
             "final_code": final_code,
             "already_generated": False,
         }
+    )
+
+
+@require_http_methods(["POST"])
+def step0_word_view(request):
+    session_id = request.COOKIES.get("session_id")
+    if not session_id:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    db = get_db()
+    session_doc = db.sessions.find_one({"session_id": session_id})
+    if not session_doc:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    try:
+        payload = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"detail": "Invalid JSON"}, status=400)
+
+    answer = payload.get("answer")
+    if not isinstance(answer, str):
+        return JsonResponse({"success": False, "message": "Incorrect word"})
+
+    normalized_answer = answer.strip().lower()
+    if normalized_answer != CORRECT_WORD:
+        return JsonResponse({"success": False, "message": "Incorrect word"})
+
+    updated = db.sessions.find_one_and_update(
+        {"session_id": session_id},
+        {
+            "$set": {
+                "current_step": 0,
+                "steps.step0": {
+                    "answer": normalized_answer,
+                    "completed": True,
+                },
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not updated:
+        return JsonResponse({"detail": "Session not found"}, status=404)
+
+    return JsonResponse(
+        {"success": True, "current_step": updated.get("current_step", 0)}
     )
 
 
