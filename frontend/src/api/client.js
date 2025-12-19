@@ -35,4 +35,25 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ answer }),
     }),
+  step1Color: (colors) =>
+    request("/step1/color/", {
+      method: "POST",
+      body: JSON.stringify({ colors }),
+    }),
+  step2Objects: (answers) =>
+    request("/step2/objects/", {
+      method: "POST",
+      body: JSON.stringify({ answers }),
+    }),
+  step3Selfie: (file, retain) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("retain", retain ? "true" : "false");
+
+    return request("/step3/selfie/", {
+      method: "POST",
+      body: fd,
+    });
+  },
+  finish: () => request("/finish/", { method: "POST" }),
 };

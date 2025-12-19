@@ -238,6 +238,93 @@ body::after {
   cursor: not-allowed;
 }
 
+.fileBox {
+  margin-top: 14px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  border: 1px dashed rgba(245,247,255,0.22);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+}
+
+.fileBoxText {
+  font-weight: 900;
+  font-size: 16px;
+  color: rgba(245,247,255,0.9);
+}
+
+.previewWrap {
+  margin-top: 14px;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(245,247,255,0.10);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+}
+
+.previewImg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.twoButtons {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.btnSecondary {
+  width: 100%;
+  border: 1px solid rgba(245,247,255,0.18);
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-size: 18px;
+  font-weight: 900;
+  color: rgba(245,255,255,0.92);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+  cursor: pointer;
+}
+
+.btnSecondary:active {
+  transform: translateY(1px);
+  filter: brightness(0.98);
+}
+
+.btnSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.codeBox {
+  margin-top: 14px;
+  width: 100%;
+  padding: 16px 14px;
+  border-radius: 18px;
+  text-align: center;
+  font-size: 34px;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  color: rgba(245,247,255,0.96);
+  border: 1px solid rgba(245,247,255,0.14);
+  background: rgba(255,255,255,0.06);
+  box-shadow:
+    0 16px 40px rgba(0,0,0,0.45),
+    0 0 18px rgba(255, 59, 92, 0.10),
+    0 0 18px rgba(53, 208, 127, 0.10);
+}
+
+@media (min-width: 380px) {
+  .twoButtons {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 .error {
   margin: 12px 0 0;
   color: rgba(255, 160, 160, 0.95);
@@ -331,4 +418,72 @@ body::after {
 
 @media (prefers-reduced-motion: reduce) {
   .shootingStar { animation: none !important; display: none; }
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.colorTile {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid rgba(245,247,255,0.14);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.40),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.colorTile:active {
+  transform: translateY(1px) scale(0.99);
+  filter: brightness(0.98);
+}
+
+.colorTile:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.tileDot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.75);
+  box-shadow: 0 0 18px rgba(255,255,255,0.22);
+  opacity: 0.35;
+}
+
+.objGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.objField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.objLabel {
+  font-size: 14px;
+  color: rgba(245,247,255,0.72);
+  font-weight: 700;
+}
+
+.objInput {
+  text-align: center;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
