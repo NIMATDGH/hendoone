@@ -1,11 +1,14 @@
 import json
 import os
 import random
+import re
+import mimetypes
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
 
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
+from django.core import signing
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from pymongo import ReturnDocument
@@ -22,6 +25,33 @@ CORRECT_OBJECT_NUMBERS = {
     "object5": 19,
     "object6": 88,
 }
+
+
+def _make_admin_cookie():
+    signer = signing.TimestampSigner()
+    return signer.sign("admin")
+
+
+def _is_admin(request):
+    token = request.COOKIES.get("admin_auth")
+    if not token:
+        return False
+    try:
+        signer = signing.TimestampSigner()
+        signer.unsign(token, max_age=60 * 60 * 24 * 7)  # 7 days
+        return True
+    except signing.BadSignature:
+        return False
+
+
+def _serialize(obj):
+    if isinstance(obj, dict):
+        return {k: _serialize(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_serialize(v) for v in obj]
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    return obj
 
 
 def health(request):
@@ -349,3 +379,123 @@ def step_view(request):
             "steps": updated.get("steps", {}),
         }
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def admin_login_view(request):
+    try:
+        body = json.loads(request.body.decode("utf-8") or "{}")
+    except Exception:
+        body = {}
+
+    pw = str(body.get("password") or "")
+    expected = os.environ.get("ADMIN_PASSWORD") or ""
+    if not expected or pw != expected:
+        return JsonResponse({"success": False, "message": "Forbidden"}, status=403)
+
+    token = _make_admin_cookie()
+    resp = JsonResponse({"success": True})
+    resp.set_cookie(
+        "admin_auth",
+        token,
+        httponly=True,
+        samesite="Lax",
+        secure=False,
+        path="/",
+        max_age=60 * 60 * 24 * 7,
+    )
+    return resp
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def admin_logout_view(request):
+    resp = JsonResponse({"success": True})
+    resp.delete_cookie("admin_auth", path="/")
+    return resp
+
+
+@require_http_methods(["GET"])
+def admin_sessions_list_view(request):
+    if not _is_admin(request):
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+
+    db = get_db()
+    q = (request.GET.get("q") or "").strip()
+    try:
+        limit = int(request.GET.get("limit") or 50)
+    except ValueError:
+        limit = 50
+    limit = min(max(limit, 1), 200)
+
+    query = {}
+    if q:
+        safe = re.escape(q)
+        query = {
+            "$or": [
+                {"session_id": {"$regex": safe, "$options": "i"}},
+                {"final_code": {"$regex": safe, "$options": "i"}},
+            ]
+        }
+
+    cursor = db.sessions.find(query).sort("created_at", -1).limit(limit)
+    items = []
+    for doc in cursor:
+        step3 = (doc.get("steps") or {}).get("step3") or {}
+        items.append(
+            {
+                "session_id": doc.get("session_id"),
+                "final_code": doc.get("final_code"),
+                "current_step": doc.get("current_step"),
+                "created_at": _serialize(doc.get("created_at")),
+                "completed_at": _serialize(doc.get("completed_at")),
+                "selfie_filename": step3.get("filename"),
+            }
+        )
+    return JsonResponse({"items": items})
+
+
+@require_http_methods(["GET"])
+def admin_session_detail_view(request, session_id):
+    if not _is_admin(request):
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+
+    db = get_db()
+    doc = db.sessions.find_one({"session_id": session_id})
+    if not doc:
+        return JsonResponse({"detail": "Not found"}, status=404)
+
+    return JsonResponse({"session": _serialize(doc)})
+
+
+@require_http_methods(["GET"])
+def uploads_selfie_view(request, session_id: str, filename: str):
+    if not _is_admin(request):
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+
+    if not filename or "/" in filename or "\\" in filename or ".." in filename:
+        return JsonResponse({"detail": "Invalid filename"}, status=400)
+
+    upload_dir = os.environ.get("UPLOAD_DIR")
+    if not upload_dir:
+        return JsonResponse({"detail": "UPLOAD_DIR not configured"}, status=500)
+
+    root = Path(upload_dir).resolve()
+    file_path = (root / session_id / filename).resolve()
+
+    if root not in file_path.parents:
+        return JsonResponse({"detail": "Forbidden"}, status=403)
+
+    if not file_path.exists():
+        return JsonResponse({"detail": "Not found"}, status=404)
+
+    content_type, _ = mimetypes.guess_type(str(file_path))
+    resp = FileResponse(open(file_path, "rb"), content_type=content_type or "application/octet-stream")
+
+    if request.GET.get("download") == "1":
+        resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    else:
+        resp["Content-Disposition"] = f'inline; filename="{filename}"'
+
+    return resp
