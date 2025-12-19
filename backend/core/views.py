@@ -6,6 +6,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from pymongo import ReturnDocument
 
@@ -27,6 +28,8 @@ def health(request):
     return JsonResponse({"status": "ok"})
 
 
+@require_http_methods(["POST"])
+@csrf_exempt
 @require_http_methods(["POST"])
 def session_view(request):
     db = get_db()
@@ -57,6 +60,7 @@ def session_view(request):
     return response
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def finish_view(request):
     session_id = request.COOKIES.get("session_id")
@@ -104,6 +108,7 @@ def finish_view(request):
     )
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def step0_word_view(request):
     session_id = request.COOKIES.get("session_id")
@@ -150,6 +155,7 @@ def step0_word_view(request):
     )
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def step2_objects_view(request):
     session_id = request.COOKIES.get("session_id")
@@ -190,6 +196,7 @@ def step2_objects_view(request):
     return JsonResponse({"success": True, "current_step": updated.get("current_step", 2)})
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def step1_color_view(request):
     session_id = request.COOKIES.get("session_id")
@@ -226,6 +233,7 @@ def step1_color_view(request):
     return JsonResponse({"success": True, "current_step": updated.get("current_step", 1)})
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def step3_selfie_view(request):
     session_id = request.COOKIES.get("session_id")
@@ -300,6 +308,7 @@ def state_view(request):
     )
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def step_view(request):
     session_id = request.COOKIES.get("session_id")
