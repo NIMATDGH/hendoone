@@ -9,7 +9,7 @@ export default function HomeScreen({ onStart, loading, error }) {
         <div className="card">
           <p className="subtitle">A short real-world puzzle hunt</p>
 
-          <div className="h2">How it works</div>
+          <div className="h2"></div>
           <ul className="bullets">
             <li>Solve each step in order</li>
             <li>Your progress stays on this device</li>

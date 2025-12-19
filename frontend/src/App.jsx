@@ -1,31 +1,39 @@
 import { useState } from "react";
 import HomeScreen from "./components/HomeScreen";
+import Step0Word from "./components/Step0Word";
+import { api } from "./api/client";
 import Background from "./components/Background";
 
+function isStep0Done(state) {
+  return Boolean(state?.steps?.step0?.completed);
+}
+
 export default function App() {
-  const [screen, setScreen] = useState("home"); 
+  const [screen, setScreen] = useState("home"); // home | game
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [gameState, setGameState] = useState(null);
+  const [state, setState] = useState(null);
+
+  async function refreshState({ showSpinner = false } = {}) {
+    if (showSpinner) setLoading(true);
+    try {
+      const s = await api.getState();
+      setState(s);
+      return s;
+    } catch (err) {
+      setError(err?.message || "Unexpected error");
+      return null;
+    } finally {
+      if (showSpinner) setLoading(false);
+    }
+  }
 
   async function startGame() {
     setLoading(true);
     setError(null);
-
     try {
-      const sessionRes = await fetch("/api/session/", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (!sessionRes.ok) throw new Error(`Session failed (${sessionRes.status})`);
-
-      const stateRes = await fetch("/api/state/", {
-        credentials: "include",
-      });
-      if (!stateRes.ok) throw new Error(`State failed (${stateRes.status})`);
-
-      const state = await stateRes.json();
-      setGameState(state);
+      await api.startSession();
+      await refreshState();
       setScreen("game");
     } catch (e) {
       setError(e?.message || "Unexpected error");
@@ -44,25 +52,30 @@ export default function App() {
           <div className="container">
             <div className="title">Hendoone</div>
 
-            <div className="card">
-              <p className="subtitle">Step {gameState?.current_step ?? "?"}</p>
+            {error && <p className="error">Error: {error}</p>}
 
-              {gameState?.current_step === 0 ? (
-                <>
-                  <div className="h2">Step 0</div>
-                  <p className="helper" style={{ textAlign: "left" }}>
-                    Word gate goes here. Next we’ll build the input + submit UI.
-                  </p>
-                </>
-              ) : (
+            {state && !isStep0Done(state) ? (
+              <Step0Word onSuccess={() => refreshState()} />
+            ) : (
+              <div className="card">
+                <p className="subtitle">Step 1</p>
+                <div className="h2">Coming soon</div>
                 <p className="helper" style={{ textAlign: "left" }}>
-                  This is a placeholder. Next we’ll render the correct step based on
-                  <code> current_step</code>.
+                  Step 1 UI will appear here once implemented.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
 
-            <button className="btnPrimary" onClick={() => setScreen("home")}>
+            <button
+              className="btnPrimary"
+              style={{ width: "100%" }}
+              onClick={() => refreshState({ showSpinner: true })}
+              disabled={loading}
+            >
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
+
+            <button className="btnPrimary" onClick={() => setScreen("home")} disabled={loading}>
               Back
             </button>
           </div>
