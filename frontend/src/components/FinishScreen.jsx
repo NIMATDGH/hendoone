@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api } from "../api/client";
 
-export default function FinishScreen({ onRefresh }) {
+export default function FinishScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [code, setCode] = useState(null);
@@ -64,9 +64,6 @@ export default function FinishScreen({ onRefresh }) {
           <div className="twoButtons" style={{ marginTop: 14 }}>
             <button className="btnSecondary" type="button" onClick={copy}>
               Copy
-            </button>
-            <button className="btnPrimary" type="button" onClick={onRefresh}>
-              Refresh
             </button>
           </div>
         </>

@@ -71,21 +71,10 @@ export default function App() {
             ) : !isStepDone(state, 3) ? (
               <Step3Selfie onSuccess={refreshState} />
             ) : (
-              <FinishScreen onRefresh={refreshState} />
+              <FinishScreen />
             )}
 
-            <button
-              className="btnPrimary"
-              style={{ width: "100%" }}
-              onClick={() => refreshState({ showSpinner: true })}
-              disabled={loading}
-            >
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-
-            <button className="btnPrimary" onClick={() => setScreen("home")} disabled={loading}>
-              Back
-            </button>
+            
           </div>
         </div>
       )}
