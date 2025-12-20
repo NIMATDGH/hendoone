@@ -1,251 +1,104 @@
-```md
 # Hendoone
 
-Hendoone is a **mobile-first**, **session-based** puzzle game.
+Hendoone is a short, step-based real-world puzzle game built as a full-stack web application.  
+It combines a React frontend with a Django backend and MongoDB for session persistence.
 
-- No accounts, no login for players
-- **One browser = one anonymous session**
-- Backend is the **source of truth** (MongoDB stores progress)
-- Frontend is UI only (renders steps, sends answers)
-- Admin can review completed sessions (code + selfie) in a **frontend admin panel**
+Players progress through a sequence of interactive steps. Progress is tracked per device using a server-side session stored in MongoDB.
 
 ---
 
-## Tech stack
+## Features
 
-- Backend: Django + PyMongo
-- Database: MongoDB
-- Frontend: React (Vite)
-- Storage: local disk uploads (`backend/uploads` mounted into the backend container)
+- Step-based puzzle flow with enforced order
+- Persistent session state stored in MongoDB
+- React (Vite) frontend with a clean, minimal UI
+- Django REST-style backend
+- Optional image upload (selfie step)
+- Dockerized backend and database
+- Simple admin endpoints for session inspection
 
 ---
 
-## Project structure
+## Tech Stack
+
+**Frontend**
+- React (Vite)
+- JavaScript (ES modules)
+- Fetch API
+
+**Backend**
+- Django
+- Django REST Framework
+- MongoDB (via PyMongo)
+
+**Infrastructure**
+- Docker & Docker Compose
+- MongoDB 6
+
+---
+
+## Project Structure
 
 ```
-
 .
-├── backend/              # Django app
-├── frontend/             # React (Vite) app
+├── backend/
+│   ├── config/
+│   ├── core/
+│   ├── uploads/
+│   ├── Dockerfile
+│   └── manage.py
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   └── App.jsx
+│   ├── index.html
+│   └── vite.config.js
+│
 ├── docker-compose.yml
-├── .env                  # local secrets (not committed)
-└── .env.example          # template for deploy
-
-````
+├── .env.example
+└── README.md
+```
 
 ---
 
-## Environment variables
+## Game Flow
 
-### Backend (root `.env`)
+1. Start session  
+2. Step 0 – Secret word  
+3. Step 1 – Color pattern  
+4. Step 2 – Object selection  
+5. Step 3 – Optional selfie upload  
+6. Finish screen  
 
-Create a `.env` in the repo root:
+Each step is validated by the backend. A player cannot skip ahead.
+
+---
+
+## Environment Variables
+
+See `.env.example` for required variables.
+
+---
+
+## Running Locally
 
 ```bash
-cp .env.example .env
-````
-
-Key variables (examples):
-
-```env
-DJANGO_SECRET_KEY=change-me
-DJANGO_DEBUG=1
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
-
-MONGO_URI=mongodb://mongo:27017
-MONGO_DB_NAME=hendoone
-
-UPLOAD_DIR=/app/uploads
-
-ADMIN_PASSWORD=change-me
+docker-compose up --build
 ```
 
-Notes:
-
-* `UPLOAD_DIR` is the path **inside** the backend container. With the default docker-compose volume, uploads end up in `backend/uploads` on your host.
-* `ADMIN_PASSWORD` is used to login to the frontend admin panel.
-
-### Frontend (`frontend/.env`)
-
-Vite exposes env vars only if they start with `VITE_`.
-
-Create:
-
-```bash
-cd frontend
-cp .env.example .env
-```
-
-Example:
-
-```env
-VITE_DEV_PORT=5173
-VITE_BACKEND_URL=http://localhost:8000
-VITE_API_BASE=/api
-```
+Backend: http://localhost:8000  
+Frontend: http://localhost:5173
 
 ---
 
-## Run the project (local dev)
+## Status
 
-### 1) Start backend + Mongo with Docker
-
-From repo root:
-
-```bash
-docker compose up --build
-```
-
-Backend runs on:
-
-* `http://localhost:8000`
-
-### 2) Start frontend (Vite dev server)
-
-In a second terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend runs on:
-
-* `http://localhost:5173`
-
----
-
-## Important URLs
-
-### Player
-
-* Frontend: `http://localhost:5173/`
-
-### Backend API
-
-* Health: `GET http://localhost:8000/api/health/`
-* Create/resume session: `POST http://localhost:8000/api/session/`
-* Current state: `GET http://localhost:8000/api/state/`
-
-### Admin
-
-* Frontend admin panel: `http://localhost:5173/admin-panel`
-* Django admin (backend): `http://localhost:8000/admin/`
-
----
-
-## Gameplay API (summary)
-
-All gameplay endpoints are under `/api/`:
-
-* `POST /api/session/`
-  Create/resume session. Sets `session_id` (HTTP-only cookie).
-
-* `GET /api/state/`
-  Returns session progress and current step.
-
-* `POST /api/step0/word/`
-  Body: `{ "word": "..." }`
-
-* `POST /api/step1/color/`
-  Body: `{ "colors": ["red","blue","green","yellow"] }`
-
-* `POST /api/step2/objects/`
-  Body: `{ "answers": [12,7,4,19,3,8] }`
-
-* `POST /api/step3/selfie/`
-  `multipart/form-data` with:
-
-  * `file` (image)
-  * `retain` (boolean)
-
-* `POST /api/finish/`
-  Returns `{ "success": true, "final_code": "......" }`. Code is permanent per session.
-
----
-
-## Admin panel behavior
-
-### Login
-
-Admin panel login calls:
-
-* `POST /api/admin/login/` with JSON `{ "password": "..." }`
-
-Backend sets `admin_auth` cookie (HTTP-only). Password is checked against `ADMIN_PASSWORD` in backend `.env`.
-
-### List/search completed sessions
-
-Admin panel uses:
-
-* `GET /api/admin/sessions/?q=...&limit=...`
-
-Search supports partial match of:
-
-* `session_id`
-* `final_code`
-
-Recommended behavior: only show completed sessions (sessions with `final_code`).
-
-### View and download selfies
-
-Uploads are served via:
-
-* `GET /uploads/<session_id>/<filename>`
-* Add `?download=1` to force download
-
-Uploads are admin-protected (requires valid `admin_auth` cookie).
-
----
-
-## Quick testing
-
-### Health check
-
-```bash
-curl http://localhost:8000/api/health/
-```
-
-### PowerShell notes
-
-In PowerShell, `curl` is often an alias for `Invoke-WebRequest`.
-
-Example:
-
-```powershell
-Invoke-WebRequest -Uri "http://localhost:8000/api/session/" -Method POST
-```
-
----
-
-## Troubleshooting
-
-### Docker build fails to pull base images (TLS timeout)
-
-This is usually a Docker Hub network/proxy/DNS issue.
-
-Things to try:
-
-* Remove any Docker registry mirrors in Docker Desktop settings
-* Set Docker Engine DNS to `1.1.1.1` and `8.8.8.8`
-* Try a different network / VPN / hotspot for first-time image pulls
-
-### Admin panel shows “No selfie” for every session
-
-Usually means the backend list endpoint isn’t returning a usable selfie link (e.g., `selfie_url`) or the frontend isn’t proxying `/uploads` in dev.
-
-Ensure:
-
-* backend admin sessions response includes selfie path (filename or URL)
-* frontend dev proxy includes `/uploads` → backend
+Active development.
 
 ---
 
 ## License
 
-Private project (add license later if needed).
-
-```
-::contentReference[oaicite:0]{index=0}
-```
+Private / internal use.
