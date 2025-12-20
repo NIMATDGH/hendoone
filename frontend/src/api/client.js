@@ -1,31 +1,31 @@
 const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
-async function request(path, options = {}) {
+const request = async (path, options = {}) => {
   const isForm = options.body instanceof FormData;
 
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
-    ...options,
     headers: {
       ...(isForm ? {} : { "Content-Type": "application/json" }),
       ...(options.headers || {}),
     },
+    ...options,
   });
 
-  const isJson = res.headers.get("content-type")?.includes("application/json");
-  const data = isJson ? await res.json().catch(() => null) : await res.text().catch(() => "");
-
-  if (!res.ok) {
-    const msg =
-      (data && data.detail) ||
-      (data && data.message) ||
-      (typeof data === "string" && data) ||
-      `API error (${res.status})`;
-    throw new Error(msg);
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
   }
 
+  if (!res.ok) {
+    const msg = (data && (data.message || data.detail)) || `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
   return data;
-}
+};
 
 export const api = {
   startSession: () => request("/session/", { method: "POST" }),
@@ -56,4 +56,16 @@ export const api = {
     });
   },
   finish: () => request("/finish/", { method: "POST" }),
+  adminLogin: (password) =>
+    request("/admin/login/", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
+  adminLogout: () => request("/admin/logout/", { method: "POST" }),
+  adminSessions: (q = "", limit = 80) => {
+    const qs = new URLSearchParams();
+    if (q) qs.set("q", q);
+    qs.set("limit", String(limit));
+    return request(`/admin/sessions/?${qs.toString()}`);
+  },
 };

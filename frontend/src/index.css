@@ -487,3 +487,62 @@ body::after {
   font-weight: 800;
   letter-spacing: 0.02em;
 }
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px;
+  background: rgba(5, 7, 18, 0.55);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  border-bottom: 1px solid rgba(245,247,255,0.08);
+}
+
+.topBarInner {
+  max-width: 420px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topBarBrand {
+  font-weight: 1000;
+  letter-spacing: 0.02em;
+  color: rgba(245,247,255,0.92);
+}
+
+.topBarLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 1000;
+  letter-spacing: 0.02em;
+
+  color: rgba(255,255,255,0.96);
+  border: 1px solid rgba(245,247,255,0.14);
+
+  background: linear-gradient(90deg, rgba(255,59,92,0.95), rgba(53,208,127,0.95));
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.35),
+    0 0 18px rgba(255,59,92,0.14),
+    0 0 18px rgba(53,208,127,0.12);
+
+  cursor: pointer;
+  transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+}
+
+.topBarLink:active {
+  transform: translateY(1px);
+  filter: brightness(0.97);
+}
+
+.topBarLink:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px rgba(53,208,127,0.18),
+    0 12px 26px rgba(0,0,0,0.35);
+}
