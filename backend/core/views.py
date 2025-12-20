@@ -102,7 +102,14 @@ def session_view(request):
             "current_step": session_doc.get("current_step", 0),
         }
     )
-    response.set_cookie("session_id", session_id, httponly=True, samesite="Lax", path="/")
+    response.set_cookie(
+        "session_id",
+        session_id,
+        httponly=True,
+        samesite="Lax",
+        secure=False,
+        path="/",
+    )
     return response
 
 
