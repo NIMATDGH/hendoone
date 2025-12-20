@@ -54,6 +54,22 @@ def _serialize(obj):
     return obj
 
 
+def _selfie_url(doc):
+    step3 = (doc.get("steps") or {}).get("step3") or {}
+    fn = step3.get("filename")
+    if fn:
+        return f"/uploads/{doc.get('session_id')}/{fn}"
+    return None
+
+
+def _selfie_url_from_doc(doc):
+    step3 = (doc.get("steps") or {}).get("step3") or {}
+    fn = step3.get("filename")
+    if fn:
+        return f"/uploads/{doc.get('session_id')}/{fn}"
+    return None
+
+
 def health(request):
     return JsonResponse({"status": "ok"})
 
@@ -429,13 +445,19 @@ def admin_sessions_list_view(request):
         limit = 50
     limit = min(max(limit, 1), 200)
 
-    query = {}
+    base_filter = {"final_code": {"$exists": True, "$ne": None, "$ne": ""}}
+    query = base_filter
     if q:
         safe = re.escape(q)
         query = {
-            "$or": [
-                {"session_id": {"$regex": safe, "$options": "i"}},
-                {"final_code": {"$regex": safe, "$options": "i"}},
+            "$and": [
+                base_filter,
+                {
+                    "$or": [
+                        {"session_id": {"$regex": safe, "$options": "i"}},
+                        {"final_code": {"$regex": safe, "$options": "i"}},
+                    ]
+                },
             ]
         }
 
@@ -451,6 +473,7 @@ def admin_sessions_list_view(request):
                 "created_at": _serialize(doc.get("created_at")),
                 "completed_at": _serialize(doc.get("completed_at")),
                 "selfie_filename": step3.get("filename"),
+                "selfie_url": _selfie_url_from_doc(doc),
             }
         )
     return JsonResponse({"items": items})
@@ -466,7 +489,9 @@ def admin_session_detail_view(request, session_id):
     if not doc:
         return JsonResponse({"detail": "Not found"}, status=404)
 
-    return JsonResponse({"session": _serialize(doc)})
+    serialized = _serialize(doc)
+    serialized["selfie_url"] = _selfie_url_from_doc(doc)
+    return JsonResponse({"session": serialized})
 
 
 @require_http_methods(["GET"])
