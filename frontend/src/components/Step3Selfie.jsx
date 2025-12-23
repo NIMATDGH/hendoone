@@ -16,7 +16,7 @@ export default function Step3Selfie({ onSuccess }) {
 
   async function upload(retain) {
     if (!file) {
-      setError("Please choose a photo first.");
+      setError("لطفا ابتدا عکس را انتخاب کنید");
       return;
     }
     setLoading(true);
@@ -27,7 +27,7 @@ export default function Step3Selfie({ onSuccess }) {
       if (res?.success) {
         await onSuccess();
       } else {
-        setError(res?.message || "Upload failed");
+        setError(res?.message || "آپلود ناموفق");
       }
     } catch (err) {
       setError(err?.message || "Server error");
@@ -38,12 +38,13 @@ export default function Step3Selfie({ onSuccess }) {
 
   return (
     <div className="card">
-      <p className="subtitle">Step 3</p>
-      <div className="h2">Take a selfie at the location</div>
+      <p className="subtitle">مرحله ۳</p>
+      <div className="h2">یه سلفی بگیر 📸</div>
 
-      <p className="helper" style={{ textAlign: "left", marginTop: 10 }}>
-        Take a selfie at the requested spot. You can upload it without allowing us to save it, or
-        allow saving for admin verification.
+      <p className="helper" style={{ textAlign: "center", marginTop: 10 }}>
+        این لحظه کوچک را برای ما ثبت کن؛
+        <br />
+ما آن را در قلب‌مان نگه می‌داریم
       </p>
 
       <label className="fileBox">
@@ -55,7 +56,7 @@ export default function Step3Selfie({ onSuccess }) {
           disabled={loading}
           style={{ display: "none" }}
         />
-        <span className="fileBoxText">{file ? "Change photo" : "Choose / Take photo"}</span>
+        <span className="fileBoxText">{file ? "تغییر عکس" : "انتخاب / گرفتن عکس"}</span>
       </label>
 
       {previewUrl && (
@@ -71,16 +72,16 @@ export default function Step3Selfie({ onSuccess }) {
           onClick={() => upload(false)}
           disabled={loading || !file}
         >
-          {loading ? "Uploading..." : "Upload (Don’t Save)"}
+          {loading ? "در حال آپلود" : "آپلود بدون ذخیره سازی"}
         </button>
 
         <button
-          className="btnPrimary"
+          className="btnPrimary btnPrimarySmall"
           type="button"
           onClick={() => upload(true)}
           disabled={loading || !file}
         >
-          {loading ? "Uploading..." : "Upload (Allow Saving)"}
+          {loading ? "در حال آپلود" : "آپلود همراه با ذخیره سازی"}
         </button>
       </div>
 
