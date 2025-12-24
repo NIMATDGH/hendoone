@@ -1,19 +1,29 @@
 import watermelon from "../assets/watermelon.png";
+import "./HomeScreen.css";
+
 
 export default function HomeScreen({ onStart, loading, error }) {
   return (
     <div className="page">
       <div className="container">
-        <div className="title">Hendoone</div>
+        <div className="title">هندونه</div>
 
         <div className="card">
-          <p className="subtitle">A short real-world puzzle hunt</p>
+          <p className="subtitle">این یه بازی معمولی نیست</p>
 
           <div className="h2"></div>
           <ul className="bullets">
-            <li>Solve each step in order</li>
-            <li>Your progress stays on this device</li>
-            <li>Selfie is optional &amp; your choice to save</li>
+            <li>این یه بازی معمولی نیست.
+قرار نیست چیزی قایم شده باشه،
+فقط باید حواست جمع‌تر از همیشه باشه.</li>
+
+            <li>جواب‌ها همین اطرافن،
+ولی خودشون رو راحت نشون نمی‌دن.
+یه کم دقیق‌تر نگاه کن.</li>
+            <li>اگه جایی گیر کردی،
+یار مخفی هست.
+با یه نشونه‌ی کوچیک قرمز.
+</li>
           </ul>
 
           <div className="watermelonWrap">
@@ -24,7 +34,7 @@ export default function HomeScreen({ onStart, loading, error }) {
         </div>
 
         <button className="btnPrimary" onClick={onStart} disabled={loading}>
-          {loading ? "Starting..." : "Start"}
+          {loading ? "در حال شروع ..." : "شروع"}
         </button>
       </div>
     </div>

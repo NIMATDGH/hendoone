@@ -15,7 +15,7 @@ export default function FinishScreen() {
       if (res?.success && final) {
         setCode(final);
       } else {
-        setError("Failed to generate code.");
+        setError("تلاس نا موقث در ساخت کد");
       }
     } catch (err) {
       setError(err?.message || "Server error");
@@ -44,16 +44,16 @@ export default function FinishScreen() {
 
   return (
     <div className="card">
-      <p className="subtitle">Complete</p>
-      <div className="h2">You did it 🎉</div>
+      <p className="subtitle">تمام شد</p>
+      <div className="h2">مبارک خیلیا 🎉</div>
 
-      <p className="helper" style={{ textAlign: "left", marginTop: 10 }}>
-        Tap below to generate your completion code.
+      <p className="helper" style={{ textAlign: "center", marginTop: 10 }}>
+        کلیک کنید تا کد مبارک شدنتون ساخته بشه 
       </p>
 
       {!code ? (
         <button className="btnPrimary" style={{ marginTop: 14 }} onClick={getCode} disabled={loading}>
-          {loading ? "Finishing..." : "Get my code"}
+          {loading ? "در حال اتمام" : "کدمو بده"}
         </button>
       ) : (
         <>
@@ -61,9 +61,9 @@ export default function FinishScreen() {
             {code}
           </div>
 
-          <div className="twoButtons" style={{ marginTop: 14 }}>
+          <div className="twoButtons" style={{ marginTop: 20 }}>
             <button className="btnSecondary" type="button" onClick={copy}>
-              Copy
+              کپی
             </button>
           </div>
         </>

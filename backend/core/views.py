@@ -15,8 +15,8 @@ from pymongo import ReturnDocument
 
 from .mongo import get_db
 
-CORRECT_WORD = "hendoone"
-CORRECT_COLORS = ["red", "blue", "green", "yellow"]
+CORRECT_WORD = "شبچره"
+CORRECT_COLORS = ["yellow", "blue", "pink", "blue"]
 CORRECT_OBJECT_NUMBERS = {
     "object1": 12,
     "object2": 7,

@@ -54,7 +54,7 @@ export default function AppGame() {
       ) : (
         <div className="page">
           <div className="container">
-            <div className="title">Hendoone</div>
+            <div className="title">هندونه</div>
 
             {error && <p className="error">Error: {error}</p>}
 

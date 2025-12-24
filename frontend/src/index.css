@@ -28,9 +28,10 @@ body {
   margin: 0;
   min-height: 100svh;
   color: var(--text);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Vazirmatn", sans-serif;
   position: relative;
   overflow-x: hidden;
+
 
   background:
     radial-gradient(1200px 700px at 50% -220px, rgba(255, 59, 92, 0.16), transparent 60%),
@@ -120,6 +121,8 @@ body::after {
   line-height: 0.95;
   letter-spacing: -0.02em;
   font-weight: 900;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 
   background: linear-gradient(180deg, var(--wmRed2), var(--wmRed));
   -webkit-background-clip: text;
@@ -129,6 +132,8 @@ body::after {
   text-shadow:
     0 14px 44px rgba(255, 59, 92, 0.18),
     0 8px 26px rgba(0, 0, 0, 0.55);
+
+  /* margin-bottom: 2rem; */
 }
 
 .card {
@@ -155,9 +160,50 @@ body::after {
   font-size: 28px;
   font-weight: 900;
   color: rgba(245, 247, 255, 0.92);
+  text-align: center;
+}
+.h2-quote {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 900;
+  color: rgba(245, 247, 255, 0.92);
+  text-align: center;
+}
+
+.h2-quote2 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 800;
+  color: rgba(245, 247, 255, 0.92);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.h2-quote3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 900;
+  color: rgba(245, 247, 255, 0.92);
+  text-align: center;
+}
+
+.h2-quote4 {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 900;
+  color: rgba(245, 247, 255, 0.92);
+  text-align: center;
+}
+
+.step0{
+  font-weight: 700;
+  font-size: 26px;
+  text-align: center;
 }
 
 .bullets {
+  direction : rtl;
+  text-align: right ;
   margin: 0;
   padding-left: 22px;
   color: var(--muted);
@@ -165,7 +211,10 @@ body::after {
   line-height: 1.45;
 }
 
-.bullets li { margin: 10px 0; }
+.bullets li {
+  margin: 10px 0;
+  margin-bottom: 0.25rem;
+}
 
 .watermelonWrap {
   display: flex;
@@ -206,6 +255,31 @@ body::after {
   opacity: 0.65;
 }
 
+
+.input2 {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 18px;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+  text-align: right;
+}
+
+.input2:focus {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+  text-align: right;
+}
+
+.input2:disabled {
+  opacity: 0.65;
+  text-align: right;
+}
+
 .btnPrimary {
   width: 100%;
   max-width: 320px;
@@ -215,6 +289,10 @@ body::after {
   font-size: 24px;
   font-weight: 900;
   color: rgba(255,255,255,0.95);
+  text-align: center;
+  display: block;
+  margin: 14px auto 0;
+  
 
   background:
     linear-gradient(90deg, var(--wmRed), var(--wmGreen));
@@ -237,6 +315,14 @@ body::after {
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+
+.btnPrimarySmall {
+  font-size: 18px;        /* smaller than 24px */
+  padding: 10px 16px;     /* slightly tighter */
+  max-width: 280px;       /* optional: visually smaller */
+}
+
 
 .fileBox {
   margin-top: 14px;
@@ -283,7 +369,7 @@ body::after {
   border: 1px solid rgba(245,247,255,0.18);
   border-radius: 999px;
   padding: 14px 18px;
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 900;
   color: rgba(245,255,255,0.92);
   background: rgba(255,255,255,0.06);
@@ -304,7 +390,8 @@ body::after {
 .codeBox {
   margin-top: 14px;
   width: 100%;
-  padding: 16px 14px;
+  padding: 10px 14px;     /* ↓ from 16px */
+  line-height: 1.1;      /* tighten text height */
   border-radius: 18px;
   text-align: center;
   font-size: 34px;
@@ -318,6 +405,7 @@ body::after {
     0 0 18px rgba(255, 59, 92, 0.10),
     0 0 18px rgba(53, 208, 127, 0.10);
 }
+
 
 @media (min-width: 380px) {
   .twoButtons {
@@ -483,10 +571,14 @@ body::after {
 }
 
 .objInput {
+  height: 36px;          /* adjust ↓ */
+  padding: 4px 8px;      /* vertical padding matters most */
+  line-height: 1.2;      /* keep text centered */
   text-align: center;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
+
 .topBar {
   position: sticky;
   top: 0;
@@ -545,4 +637,44 @@ body::after {
   box-shadow:
     0 0 0 4px rgba(53,208,127,0.18),
     0 12px 26px rgba(0,0,0,0.35);
+}
+
+
+.appShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.appContent {
+  flex: 1;
+}
+
+.appFooter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  padding: 32px 0;
+}
+
+.footerLogo {
+  height: 64px; /* adjust */
+  width: auto;
+}
+
+
+
+.adminMedia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.adminThumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;     /* key: prevents stretching */
+  border-radius: 12px;
+  display: block;
 }
