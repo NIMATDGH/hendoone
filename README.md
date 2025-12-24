@@ -1,70 +1,46 @@
 # Hendoone
 
-Short, step-based real-world puzzle game with a Django backend and Vite + React frontend.
+Hendoone is a short, step-based real-world puzzle game. Players solve a few lightweight challenges and upload a selfie; admins can review sessions and downloaded selfies. The project ships with a Django API, a Vite + React frontend, and Docker Compose for local and deployment use.
 
-## Stack
-- Backend: Django, MongoDB (PyMongo)
-- Frontend: React (Vite), fetch with cookie-based sessions
-- Infra: Docker Compose
+## What lives where
+- Backend (Django + MongoDB): `backend/core/views.py` holds the API for steps, selfies, and admin login; `backend/core/mongo.py` handles Mongo connections. Selfies are stored on disk under `UPLOAD_DIR` and are served via `/uploads/<session>/<filename>` (admin cookie required).
+- Frontend (Vite + React): `frontend/src/AppGame.jsx` runs the player flow (word gate, color pattern, object counts, selfie upload, final code). `frontend/src/pages/AdminPanel.jsx` is a lightweight admin search/download UI. API calls live in `frontend/src/api/client.js` and always include cookies.
+- Compose / infra: `docker-compose.yml` wires backend, Mongo, frontend, and an nginx reverse proxy. `deploy/nginx.conf` is the default proxy used by Compose; `deploy/nginx.example.conf` is a starting point for your own domain/TLS setup.
 
-## Repo layout
-- `backend/` — Django app and API
-- `frontend/` — Vite + React app (game + admin panel)
-- `docker-compose.yml` — backend + MongoDB
-- `deploy/` — example reverse-proxy config
+## Prerequisites
+- Docker and Docker Compose
+- Optional for non-Docker dev: Node.js 20+ and npm (frontend), Python 3.11+ (backend)
 
-## Prereqs
-- Docker & Docker Compose
-- Node.js 18+ and npm (for frontend dev server)
+## Configuration
+Copy `.env.example` to `.env` in the repo root and fill values. Suggested local values (work with the provided Compose services):
+```
+DJANGO_SECRET_KEY=dev-change-me
+DJANGO_DEBUG=True
+DJANGO_ALLOWED_HOSTS=*
+MONGO_URI=mongodb://mongo:27017/hendoone
+MONGO_DB_NAME=hendoone
+UPLOAD_DIR=/app/uploads
+ADMIN_PASSWORD=choose-a-strong-password
+FRONTEND_ORIGIN=http://localhost:8080
+```
+Notes:
+- `UPLOAD_DIR` must match the path mounted into the backend container (Compose already mounts `./backend/uploads` to `/app/uploads`).
+- `ADMIN_PASSWORD` controls admin login at `/api/admin/login/`; the admin cookie (`admin_auth`) is required to view `/uploads/...`.
+- Frontend builds default to `VITE_API_BASE=/api`; override with `--build-arg VITE_API_BASE=...` if you host the API elsewhere or behind a different path.
 
-## Backend setup
-1) Copy `.env.example` → `.env` (repo root) and set values, especially:
-   - `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `MONGO_URI`, `MONGO_DB_NAME`
-   - `UPLOAD_DIR` (for selfies)
-   - `ADMIN_PASSWORD` (for admin login)
-2) Start backend + MongoDB:
-   ```bash
-   docker compose up --build
-   ```
-   Backend listens on `http://localhost:8000`.
+## Run locally with Docker
+1) Create `.env` as above.
+2) Build and start everything:  
+   `docker compose up --build`
+3) Open the app at `http://localhost:8080` (nginx → frontend). The game will start a session via `/api/session/` and proceed through the steps.
+4) Admin panel: `http://localhost:8080/admin-panel` (authenticate with `ADMIN_PASSWORD`). Selfie downloads use `/uploads/<session_id>/selfie.<ext>`.
+5) Data is persisted via the `mongo_data` volume (MongoDB) and `./backend/uploads` (selfies).
 
-## Frontend setup
-1) Copy `frontend/.env.example` → `frontend/.env` and adjust if needed:
-   - `VITE_DEV_PORT=5173`
-   - `VITE_BACKEND_URL=http://localhost:8000`
-   - `VITE_API_BASE=/api`
-2) Install deps and run dev server:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-   Frontend runs on `http://localhost:5173`.
+For frontend-only development, you can still run `docker compose up mongo backend` and then `npm install && npm run dev` inside `frontend/`, hitting `http://localhost:5173`.
 
-## Gameplay flow
-1) Session start (Step 0 word gate)
-2) Step 1 color pattern
-3) Step 2 object numbers
-4) Step 3 selfie upload + consent
-5) Finish → final code
-All requests include cookies (`credentials: "include"`). Dev proxy forwards `/api`, `/admin`, `/uploads` to the backend.
-
-## Admin panel
-- UI at `http://localhost:5173/admin-panel`
-- Login posts to `/api/admin/login/` with the password set in `ADMIN_PASSWORD`; sets `admin_auth` HttpOnly cookie.
-- Sessions list/search uses `/api/admin/sessions/`; selfie thumbnails use `/uploads/<session_id>/<filename>`.
-
-## Deployment (with your own reverse proxy / Nginx)
-- This repo does not include Nginx; run your own reverse proxy.
-- Recommended routing (single origin):
-  - `/` -> frontend
-  - `/api/` -> backend
-  - `/uploads/` -> backend
-  - `/admin/` -> backend (optional)
-- Reference config: `deploy/nginx.example.conf`
-- Frontend build should use relative API base: `VITE_API_BASE=/api`
-
-## Notes
-- Selfie upload path is `/uploads/<session_id>/<filename>`; admin cookie required to view/download.
-- Vite dev server proxies `/api`, `/admin`, `/uploads` to the backend (values controlled by env).
-- Keep `.env` files out of VCS; `.env.example` files show required keys.
+## Deployment hints
+- Build and run with Compose (or similar): `docker compose --env-file .env up -d --build`. Set `DJANGO_DEBUG=False`, a strong `DJANGO_SECRET_KEY`, and a restrictive `DJANGO_ALLOWED_HOSTS` (your domain).
+- Reverse proxy: Start from `deploy/nginx.example.conf`; set `server_name` to your domain and add TLS. Routes should keep everything on one origin: `/` → frontend, `/api/` → backend, `/uploads/` → backend or a file alias to the uploads volume, `/admin/` → backend (optional).
+- Frontend build args: ensure `VITE_API_BASE` points to the API path you expose (commonly `/api`). If you serve the static build from another host, make it an absolute URL.
+- Storage: persist Mongo data and the uploads directory across deploys. Make sure nginx (or your proxy) can read the uploads path if you use `alias`; otherwise proxy to the backend `/uploads/` route.
+- Environment reminders: keep `.env` out of version control, rotate `ADMIN_PASSWORD` periodically, and consider enabling HTTPS and stricter cookies (`secure=True`) in production.
